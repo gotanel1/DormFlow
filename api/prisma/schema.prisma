@@ -1,0 +1,233 @@
+// DormFlow — Prisma schema (PostgreSQL)
+// ระบบหอพัก: ห้องพัก, ผู้เช่า, สัญญา, บิล, ชำระเงิน, มิเตอร์, ซ่อมบำรุง
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum RoomStatus {
+  RENTED // มีผู้เช่า
+  VACANT // ว่าง
+  RESERVED // จอง
+  MAINTENANCE // ปิดปรับปรุง
+}
+
+enum TenantStatus {
+  ACTIVE
+  MOVED_OUT
+}
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRING // ใกล้หมดอายุ (<=30 วัน)
+  EXPIRED
+  TERMINATED
+}
+
+enum InvoiceStatus {
+  PAID
+  PENDING // รอชำระ
+  OVERDUE // ค้างชำระ
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  QR
+}
+
+enum WorkPriority {
+  HIGH
+  NORMAL
+  LOW
+}
+
+enum WorkStatus {
+  NEW // รับเรื่อง
+  IN_PROGRESS // กำลังซ่อม
+  DONE // เสร็จแล้ว
+}
+
+// ---------- Models ----------
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(STAFF)
+  phone        String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  payments   Payment[]
+  auditLogs  AuditLog[]
+}
+
+model Room {
+  id           String     @id // เช่น "A201"
+  floor        Int
+  type         String     // ห้องเดี่ยวแอร์, ห้องสวีท...
+  rent         Int        // บาท/เดือน
+  status       RoomStatus @default(VACANT)
+  waterMeter   Int        @default(0) // หน่วยล่าสุด
+  elecMeter    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  tenants     Tenant[]       @relation("RoomTenants")
+  currentTenant Tenant?      @relation("RoomCurrentTenant")
+  contracts   Contract[]
+  invoices    Invoice[]
+  readings    MeterReading[]
+  workOrders  WorkOrder[]
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  idCard    String?
+  deposit   Int      @default(0) // เงินประกัน
+  balance   Int      @default(0) // ยอดค้างชำระ
+  status    TenantStatus @default(ACTIVE)
+  moveInAt  DateTime?
+  moveOutAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  currentRoomId  String?  @unique
+  currentRoom    Room?    @relation("RoomCurrentTenant", fields: [currentRoomId], references: [id])
+  roomHistory    Room[]   @relation("RoomTenants")
+  contracts      Contract[]
+  invoices       Invoice[]
+}
+
+model Contract {
+  id        String         @id @default(cuid())
+  tenantId  String
+  roomId    String
+  startDate DateTime
+  endDate   DateTime
+  months    Int
+  deposit   Int
+  status    ContractStatus @default(ACTIVE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+  room   Room   @relation(fields: [roomId], references: [id])
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  no         String        @unique // เลขที่บิล เช่น INV-2026-09-001
+  period     String        // "2026-09"
+  roomId     String
+  tenantId   String
+  rentAmount Int
+  waterUnits Int           @default(0)
+  elecUnits  Int           @default(0)
+  waterRate  Int           @default(18)
+  elecRate   Int           @default(7)
+  waterAmount Int
+  elecAmount  Int
+  total      Int
+  dueDate    DateTime
+  status     InvoiceStatus @default(PENDING)
+  paidAt     DateTime?
+  createdAt  DateTime      @default(now())
+
+  room    Room          @relation(fields: [roomId], references: [id])
+  tenant  Tenant        @relation(fields: [tenantId], references: [id])
+  payments Payment[]
+
+  @@unique([roomId, period]) // หนึ่งห้องหนึ่งบิลต่อเดือน
+  @@index([status])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  invoiceId   String
+  amount      Int
+  method      PaymentMethod @default(CASH)
+  note        String?
+  receivedAt  DateTime      @default(now())
+  recordedById String?
+
+  invoice Invoice   @relation(fields: [invoiceId], references: [id])
+  recordedBy User?  @relation(fields: [recordedById], references: [id])
+}
+
+model MeterReading {
+  id         String   @id @default(cuid())
+  roomId     String
+  month      String // "2026-09"
+  waterPrev  Int      @default(0) // เลขมิเตอร์น้ำครั้งก่อน
+  waterCurr  Int      @default(0) // เลขมิเตอร์น้ำครั้งนี้
+  elecPrev   Int      @default(0)
+  elecCurr   Int      @default(0)
+  waterUnits Int // หน่วยที่ใช้ = curr - prev
+  elecUnits  Int
+  recordedAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id])
+
+  @@unique([roomId, month])
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  month     String // "2026-09"
+  category  String // ค่าไฟส่วนกลาง, ซ่อมบำรุง, เงินเดือน, อื่นๆ
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([month])
+}
+
+model WorkOrder {
+  id          String      @id @default(cuid())
+  roomId      String
+  title       String
+  category    String
+  priority    WorkPriority @default(NORMAL)
+  status      WorkStatus  @default(NEW)
+  createdAt   DateTime    @default(now())
+  completedAt DateTime?
+
+  room Room @relation(fields: [roomId], references: [id])
+
+  @@index([status])
+}
+
+model DormSetting {
+  key   String @id
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String // CREATE_INVOICE, RECEIVE_PAYMENT, EDIT_ROOM...
+  entity    String
+  entityId  String
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}

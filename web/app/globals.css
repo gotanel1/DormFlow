@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  /* Salesforce Lightning design tokens */
+  --color-brand: #0176d3;
+  --color-brand-dark: #014486;
+  --color-brand-soft: #eef4ff;
+  --color-ink: #080707;
+  --color-ink-soft: #3e3e3c;
+  --color-line: #e5e5e5;
+  --color-line-strong: #c9c9c9;
+  --color-page: #f3f3f3;
+  --color-success: #2e844a;
+  --color-success-soft: #e5f3e8;
+  --color-warn: #dd7a01;
+  --color-warn-soft: #fdf2e4;
+  --color-danger: #ba0517;
+  --color-danger-soft: #fcf2f3;
+  --font-sans: "Salesforce Sans", "Segoe UI", "SF Pro Text", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #d3d3d3;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
