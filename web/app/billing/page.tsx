@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Loader2, Plus, QrCode, XCircle } from "lucide-react";
+import { CheckCircle2, FileSpreadsheet, Loader2, Plus, QrCode, XCircle } from "lucide-react";
 import { Badge, Btn, Card, PageHeader, Row, Tabs, Td, Th } from "@/components/ui";
 import { api, CURRENT_PERIOD, INV_STATUS, THB, thaiDate, useApi, type InvoiceDTO } from "@/lib/api";
+import { exportXlsx } from "@/lib/export";
 
 export default function BillingPage() {
   const { data, isValidating, mutate: refetch } = useApi<{ invoices: InvoiceDTO[] }>(`/invoices?period=${CURRENT_PERIOD}`);
@@ -11,6 +12,22 @@ export default function BillingPage() {
   const [tab, setTab] = useState("ทั้งหมด");
   const [notify, setNotify] = useState("");
   const [err, setErr] = useState("");
+
+  const exportBills = () =>
+    exportXlsx(`bills-${CURRENT_PERIOD}`, "Bills", [
+      { header: "เลขที่บיל", value: (i: InvoiceDTO) => i.no },
+      { header: "รอบ", value: (i: InvoiceDTO) => i.period },
+      { header: "ห้อง", value: (i: InvoiceDTO) => i.room.id },
+      { header: "ผู้เช่า", value: (i: InvoiceDTO) => i.tenant.name },
+  { header: "Rent (THB)", value: (i: InvoiceDTO) => i.rentAmount },
+      { header: "น้ำ(หน่วย)", value: (i: InvoiceDTO) => i.waterUnits },
+      { header: "ไฟ(หน่วย)", value: (i: InvoiceDTO) => i.elecUnits },
+      { header: "คาน้ำ(฿)", value: (i: InvoiceDTO) => i.waterAmount },
+      { header: "ค่าไฟ(฿)", value: (i: InvoiceDTO) => i.elecAmount },
+      { header: "รวม(฿)", value: (i: InvoiceDTO) => i.total },
+      { header: "สถานะ", value: (i: InvoiceDTO) => (i.status === "PAID" ? "ชำระแล้ว" : i.status === "OVERDUE" ? "ค้างชำระ" : "รอชำระ") },
+      { header: "จ่ายเมื่อ", value: (i: InvoiceDTO) => (i.paidAt ? thaiDate(i.paidAt) : "—") },
+    ], invoices);
 
   const totals = useMemo(() => {
     const paid = invoices.filter((i) => i.status === "PAID").reduce((s, i) => s + i.total, 0);
@@ -62,15 +79,18 @@ export default function BillingPage() {
         title="บิลและการเงิน"
         desc={`รอบบิลปัจจุบัน: กันยายน 2569 · หมดเขตชำระวันที่ 10`}
         actions={
-          <>
-            <Btn variant="brand" icon={QrCode}>
-              สร้าง QR รับชำระ
-            </Btn>
-            <Btn variant="neutral" icon={Plus} onClick={createBills}>
-              ออกบิลเดือนหน้า
-            </Btn>
-          </>
-        }
+                  <>
+                    <Btn variant="brand" icon={QrCode}>
+                      สร้าง QR รับชำระ
+                    </Btn>
+                    <Btn variant="neutral" icon={FileSpreadsheet} onClick={() => exportBills()}>
+                      ส่งออก Excel
+                    </Btn>
+                    <Btn variant="neutral" icon={Plus} onClick={createBills}>
+                      ออกบิลเดือนหน้า
+                    </Btn>
+                  </>
+                }
       />
 
       {notify && (
@@ -160,7 +180,12 @@ export default function BillingPage() {
                           รับชำระ
                         </Btn>
                       ) : (
-                        <span className="text-xs text-ink-soft">จ่ายเมื่อ {thaiDate(b.paidAt)}</span>
+                        <div className="flex items-center gap-1.5">
+                          <a href={`http://localhost:3001/api/pdf/invoices/${b.id}/receipt`} target="_blank" className="text-xs font-medium text-brand hover:underline">
+                            ใบเสร็จ PDF
+                          </a>
+                          <span className="text-xs text-ink-soft">จ่ายเมื่อ {thaiDate(b.paidAt)}</span>
+                        </div>
                       )}
                     </Td>
                   </Row>

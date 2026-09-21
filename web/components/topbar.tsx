@@ -1,8 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Bell, CalendarDays, ChevronDown, LogOut, Menu, Search } from "lucide-react";
+import { CalendarDays, ChevronDown, LogOut, Menu, Search } from "lucide-react";
 import { loggedInUser, setToken } from "@/lib/api";
+import NotificationBell from "./notification-bell";
 
 export default function TopBar({ onMenu }: { onMenu?: () => void }) {
   const router = useRouter();
@@ -36,10 +37,7 @@ export default function TopBar({ onMenu }: { onMenu?: () => void }) {
           <span className="hidden md:inline">พุธ 18 ก.ย. 2569</span>
           <span className="md:hidden">18 ก.ย. 69</span>
         </span>
-        <button className="relative rounded-full p-1.5 text-ink-soft transition hover:bg-page">
-          <Bell size={17} />
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-danger ring-2 ring-white" />
-        </button>
+        <NotificationBell />
         <div className="h-6 w-px bg-line" />
         <button className="flex items-center gap-2 rounded-md py-1 pl-0.5 pr-1.5 transition hover:bg-page">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#032d60] text-[11px] font-semibold text-white">

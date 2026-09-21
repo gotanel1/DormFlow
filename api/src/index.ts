@@ -10,6 +10,9 @@ import workorderRoutes from "./routes/workorders.js";
 import meterRoutes from "./routes/meters.js";
 import settingRoutes from "./routes/settings.js";
 import expenseRoutes from "./routes/expenses.js";
+import pdfRoutes from "./routes/pdfs.js";
+import notificationRoutes from "./routes/notifications.js";
+import userRoutes from "./routes/users.js";
 
 const app = express();
 app.use(cors({ origin: ["http://localhost:8080", "http://localhost:3000"], credentials: true }));
@@ -25,6 +28,9 @@ app.use("/api/workorders", workorderRoutes);
 app.use("/api/meters", meterRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/pdf", pdfRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/users", userRoutes);
 
 // 404 + error handler
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));

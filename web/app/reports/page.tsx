@@ -1,9 +1,10 @@
 "use client";
 
-import { Download, Loader2, Printer } from "lucide-react";
+import { Download, FileSpreadsheet, Loader2, Printer } from "lucide-react";
 import { Badge, Btn, Card, PageHeader, Row, Td, Th } from "@/components/ui";
 import { BarsGrouped, Donut, Sparkline } from "@/components/charts";
 import { THB, thaiMonth, useApi, type SummaryDTO } from "@/lib/api";
+import { exportXlsx } from "@/lib/export";
 
 const occSeries = [72, 75, 70, 74, 78, 76, 80, 83];
 
@@ -32,6 +33,20 @@ export default function ReportsPage() {
     })
     .reverse();
 
+  const exportReports = () =>
+    exportXlsx(
+      `report-monthly`,
+      "Report",
+      [
+        { header: "Month", value: (r: (typeof rows)[0]) => r.month },
+        { header: "Income (THB)", value: (r: (typeof rows)[0]) => r.income },
+        { header: "Expense (THB)", value: (r: (typeof rows)[0]) => r.expense },
+        { header: "Net (THB)", value: (r: (typeof rows)[0]) => r.net },
+        { header: "Margin %", value: (r: (typeof rows)[0]) => (r.income > 0 ? ((r.net / r.income) * 100).toFixed(1) : 0) },
+      ],
+      rows
+    );
+
   return (
     <>
       <PageHeader
@@ -42,7 +57,7 @@ export default function ReportsPage() {
             <Btn variant="neutral" icon={Printer} onClick={() => window.print()}>
               พิมพ์ / PDF
             </Btn>
-            <Btn variant="neutral" icon={Download} disabled>
+            <Btn variant="neutral" icon={FileSpreadsheet} onClick={exportReports}>
               ส่งออก Excel
             </Btn>
           </>

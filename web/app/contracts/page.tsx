@@ -158,9 +158,19 @@ export default function ContractsPage() {
                       </Td>
                       <Td right>
                         {st !== "ยังดำเนิน" && (
-                          <Btn size="sm" variant="neutral" icon={CalendarClock} onClick={() => extend(c.id)}>
-                            ต่ออายุ 12 เดือน
-                          </Btn>
+                          <span className="flex items-center gap-1.5">
+                            <a href={`http://localhost:3001/api/pdf/contracts/${c.id}/pdf`} target="_blank" className="text-xs font-medium text-brand hover:underline">
+                              PDF
+                            </a>
+                            <Btn size="sm" variant="neutral" icon={CalendarClock} onClick={() => extend(c.id)}>
+                              ต่ออายุ 12 เดือน
+                            </Btn>
+                          </span>
+                        )}
+                        {st === "ยังดำเนิน" && (
+                          <a href={`http://localhost:3001/api/pdf/contracts/${c.id}/pdf`} target="_blank" className="text-xs font-medium text-brand hover:underline">
+                            PDF
+                          </a>
                         )}
                       </Td>
                     </Row>

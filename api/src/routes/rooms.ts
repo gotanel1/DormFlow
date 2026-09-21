@@ -58,6 +58,23 @@ const patchSchema = z.object({
   elecMeter: z.number().int().min(0).optional(),
 });
 
+router.get("/:id", requireAuth, async (req, res) => {
+  const room = await prisma.room.findUnique({
+    where: { id: req.params.id },
+    include: {
+      currentTenant: true,
+      contracts: { include: { tenant: { select: { name: true } } }, orderBy: { startDate: "desc" } },
+      readings: { orderBy: { month: "desc" }, take: 8 },
+      workOrders: { orderBy: { createdAt: "desc" }, take: 8 },
+    },
+  });
+  if (!room) {
+    res.status(404).json({ error: "ไม่พบห้อง" });
+    return;
+  }
+  res.json({ room });
+});
+
 router.patch("/:id", requireAuth, requireAdmin, async (req, res) => {
   const parsed = patchSchema.safeParse(req.body);
   if (!parsed.success) {

@@ -231,3 +231,15 @@ model AuditLog {
 
   user User? @relation(fields: [userId], references: [id])
 }
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String // overdue | contract_expiring | work_high | system
+  key       String   @unique // dedupe รายวัน เช่น "overdue:INV-2026-09-001:2026-09-21"
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([read])
+}

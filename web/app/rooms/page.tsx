@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Eye, Loader2, Plus, Search, Wrench, XCircle } from "lucide-react";
 import { Badge, Btn, Card, Field, Modal, PageHeader, Row, Tabs, Td, Th, inputCls } from "@/components/ui";
 import { api, ROOM_STATUS, THB, useApi, type RoomDTO } from "@/lib/api";
@@ -108,15 +109,17 @@ export default function RoomsPage() {
                       </Badge>
                     </Td>
                     <Td right>
-                      <div className="flex justify-end gap-1">
-                        <Btn size="sm" variant="ghost" icon={Eye}>
-                          ดู
-                        </Btn>
-                        <Btn size="sm" variant="ghost" icon={Wrench}>
-                          ซ่อม
-                        </Btn>
-                      </div>
-                    </Td>
+                                          <div className="flex justify-end gap-1">
+                                            <Link href={`/rooms/${r.id}`}>
+                                              <Btn size="sm" variant="ghost" icon={Eye}>
+                                                ดู
+                                              </Btn>
+                                            </Link>
+                                            <Btn size="sm" variant="ghost" icon={Wrench}>
+                                              ซ่อم
+                                            </Btn>
+                                          </div>
+                                        </Td>
                   </Row>
                 ))}
                 {list.length === 0 && (

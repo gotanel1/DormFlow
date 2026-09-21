@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Building2, DoorOpen, Gauge, ReceiptText, ScrollText, Settings, Home, Users, Wallet, Wrench } from "lucide-react";
+import { BarChart3, Building2, DoorOpen, Gauge, ReceiptText, ScrollText, Settings, Home, UserCog, Users, Wallet, Wrench } from "lucide-react";
 
 const NAV = [
   { href: "/", label: "หน้าหลัก", icon: Home },
@@ -14,6 +14,7 @@ const NAV = [
   { href: "/expenses", label: "รายจ่าย", icon: Wallet },
   { href: "/maintenance", label: "ซ่อมบำรุง", icon: Wrench },
   { href: "/reports", label: "รายงาน", icon: BarChart3 },
+  { href: "/users", label: "ผู้ใช้ระบบ", icon: UserCog },
   { href: "/settings", label: "ตั้งค่า", icon: Settings },
 ];
 
