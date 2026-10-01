@@ -13,6 +13,7 @@ import expenseRoutes from "./routes/expenses.js";
 import pdfRoutes from "./routes/pdfs.js";
 import notificationRoutes from "./routes/notifications.js";
 import userRoutes from "./routes/users.js";
+import qrRoutes from "./routes/qr.js";
 
 const app = express();
 app.use(cors({ origin: ["http://localhost:8080", "http://localhost:3000"], credentials: true }));
@@ -31,6 +32,7 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/pdf", pdfRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/qr", qrRoutes);
 
 // 404 + error handler
 app.use((_req, res) => res.status(404).json({ error: "Not found" }));

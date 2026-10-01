@@ -5,6 +5,7 @@ import { CheckCircle2, FileSpreadsheet, Loader2, Plus, QrCode, XCircle } from "l
 import { Badge, Btn, Card, PageHeader, Row, Tabs, Td, Th } from "@/components/ui";
 import { api, CURRENT_PERIOD, INV_STATUS, THB, thaiDate, useApi, type InvoiceDTO } from "@/lib/api";
 import { exportXlsx } from "@/lib/export";
+import { QrModal } from "@/components/qr-modal";
 
 export default function BillingPage() {
   const { data, isValidating, mutate: refetch } = useApi<{ invoices: InvoiceDTO[] }>(`/invoices?period=${CURRENT_PERIOD}`);
@@ -12,6 +13,7 @@ export default function BillingPage() {
   const [tab, setTab] = useState("ทั้งหมด");
   const [notify, setNotify] = useState("");
   const [err, setErr] = useState("");
+  const [qrInvoice, setQrInvoice] = useState<InvoiceDTO | null>(null);
 
   const exportBills = () =>
     exportXlsx(`bills-${CURRENT_PERIOD}`, "Bills", [
@@ -43,6 +45,11 @@ export default function BillingPage() {
   }, [invoices]);
 
   const list = invoices.filter((i) => tab === "ทั้งหมด" || i.status === tab);
+
+  const firstUnpaid = useMemo(
+    () => [...invoices].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).find((i) => i.status !== "PAID"),
+    [invoices],
+  );
 
   const toast = (msg: string) => {
     setNotify(msg);
@@ -80,7 +87,12 @@ export default function BillingPage() {
         desc={`รอบบิลปัจจุบัน: กันยายน 2569 · หมดเขตชำระวันที่ 10`}
         actions={
                   <>
-                    <Btn variant="brand" icon={QrCode}>
+                    <Btn
+                      variant="brand"
+                      icon={QrCode}
+                      disabled={!firstUnpaid}
+                      onClick={() => firstUnpaid && setQrInvoice(firstUnpaid)}
+                    >
                       สร้าง QR รับชำระ
                     </Btn>
                     <Btn variant="neutral" icon={FileSpreadsheet} onClick={() => exportBills()}>
@@ -176,9 +188,14 @@ export default function BillingPage() {
                     </Td>
                     <Td right>
                       {b.status !== "PAID" ? (
-                        <Btn size="sm" variant="brand" onClick={() => pay(b.id)}>
-                          รับชำระ
-                        </Btn>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Btn size="sm" variant="neutral" icon={QrCode} onClick={() => setQrInvoice(b)}>
+                            QR
+                          </Btn>
+                          <Btn size="sm" variant="brand" onClick={() => pay(b.id)}>
+                            รับชำระ
+                          </Btn>
+                        </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
                           <a href={`http://localhost:3001/api/pdf/invoices/${b.id}/receipt`} target="_blank" className="text-xs font-medium text-brand hover:underline">
@@ -201,6 +218,8 @@ export default function BillingPage() {
           </a>
         </div>
       </Card>
+
+      <QrModal invoice={qrInvoice} onClose={() => setQrInvoice(null)} />
     </>
   );
 }

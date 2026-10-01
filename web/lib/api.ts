@@ -16,12 +16,14 @@ export function setToken(t: string | null) {
   else window.localStorage.removeItem(TOKEN_KEY);
 }
 
-export function loggedInUser(): { name: string; role: string; username: string } | null {
+export function loggedInUser(): { id: string; name: string; role: string; username: string } | null {
   const t = getToken();
   if (!t) return null;
   try {
-    const p = JSON.parse(atob(t.split(".")[1]));
-    return { name: p.name, role: p.role, username: p.username };
+    // JWT ใช้ base64url (มี -/_ และไม่เติม =) — atob() ตรง ๆ จะพัง
+    const b64 = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const p = JSON.parse(atob(b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), "=")));
+    return { id: p.id, name: p.name, role: p.role, username: p.username };
   } catch {
     return null;
   }

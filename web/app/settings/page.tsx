@@ -81,9 +81,19 @@ export default function SettingsPage() {
             <Field label="เลขบัญชีธนาคาร (รับเงิน)">
               <input className={inputCls} value={form.BANK_ACCOUNT ?? ""} onChange={(e) => set("BANK_ACCOUNT", e.target.value)} disabled={!isAdmin} />
             </Field>
+            <Field label="เบอร์พร้อมเพย์ (รับจ่ายผ่าน QR)">
+              <input
+                inputMode="numeric"
+                className={inputCls}
+                placeholder="0812345678"
+                value={form.PROMPTPAY_PHONE ?? ""}
+                onChange={(e) => set("PROMPTPAY_PHONE", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                disabled={!isAdmin}
+              />
+            </Field>
           </div>
           <div className="mt-4 flex justify-end">
-            <Btn variant="brand" icon={Save} disabled={!isAdmin} onClick={() => save(["DORM_NAME", "DORM_PHONE", "DORM_ADDRESS", "BANK_ACCOUNT"], "ข้อมูลหอพัก")}>
+            <Btn variant="brand" icon={Save} disabled={!isAdmin} onClick={() => save(["DORM_NAME", "DORM_PHONE", "DORM_ADDRESS", "BANK_ACCOUNT", "PROMPTPAY_PHONE"], "ข้อมูลหอพัก")}>
               บันทึก
             </Btn>
           </div>

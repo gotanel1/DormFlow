@@ -11,6 +11,7 @@ export const DEFAULTS: Record<string, string> = {
   DORM_ADDRESS: "ซอยสุขุมวิท 31 แขวงคลองตันเหนือ เขตวัฒนา กรุงเทพฯ",
   DORM_PHONE: "02-xxx-xxxx",
   BANK_ACCOUNT: "123-4-56789-0 · ธ.กรุงเทพ",
+  PROMPTPAY_PHONE: "0812345678",
   WATER_RATE: "18",
   ELEC_RATE: "7",
   SERVICE_FEE: "0",
@@ -44,6 +45,24 @@ router.put("/", requireAuth, requireAdmin, async (req, res) => {
     if (["WATER_RATE", "ELEC_RATE", "SERVICE_FEE", "PAYMENT_DUE_DAY"].includes(k) && !/^\d+$/.test(v)) {
       res.status(400).json({ error: `ค่า ${k} ต้องเป็นตัวเลข` });
       return;
+    }
+  }
+
+  // เบอร์พร้อมเพย์: ว่างได้ (ปิดฟีเจอร์ QR) · ถ้ามีค่าต้องเป็นมือถือไทย 10 หลัก
+  const ppIdx = entries.findIndex(([k]) => k === "PROMPTPAY_PHONE");
+  if (ppIdx >= 0) {
+    const digits = entries[ppIdx][1].replace(/\D/g, "");
+    if (digits === "") {
+      entries[ppIdx][1] = "";
+    } else {
+      let d = digits;
+      if (d.startsWith("66") && d.length >= 11) d = `0${d.slice(2)}`;
+      if (d.length === 9 && d.startsWith("8")) d = `0${d}`;
+      if (!/^0\d{9}$/.test(d)) {
+        res.status(400).json({ error: "เบอร์พร้อมเพย์ต้องเป็นมือถือไทย 10 หลัก (เช่น 0812345678) — หรือเว้นว่างเพื่อปิดฟีเจอร์ QR" });
+        return;
+      }
+      entries[ppIdx][1] = d;
     }
   }
 
